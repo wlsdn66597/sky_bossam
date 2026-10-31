@@ -1,0 +1,7 @@
+# 실시간 실행용 (노트북). PyTorch 없이 ONNX Runtime만으로 동작해요.
+# 라즈베리파이 4는 numpy 충돌을 피하려고 apt로 설치해요 → README의 "7. 라즈베리파이 4로 옮기기" 참고
+onnxruntime>=1.17
+numpy
+opencv-python
+pyyaml
+requests

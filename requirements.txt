@@ -1,0 +1,10 @@
+# 학습·평가용 (RTX 4090 PC)
+# PyTorch는 먼저 CUDA 버전에 맞춰 설치하세요: https://pytorch.org/get-started/locally/
+ultralytics>=8.3.0
+onnx>=1.15
+onnxslim
+onnxruntime>=1.17
+roboflow>=1.1.0
+numpy
+opencv-python
+pyyaml

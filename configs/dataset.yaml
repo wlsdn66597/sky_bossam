@@ -1,0 +1,37 @@
+# 데이터셋 설정
+# 원본: https://universe.roboflow.com/jennifer-verona-uzduw/baby-position-esrva (CC BY 4.0)
+roboflow:
+  workspace: jennifer-verona-uzduw
+  project: baby-position-esrva
+  version: 1
+  format: yolov8
+
+raw_dir: datasets/raw/baby-position-v1   # Roboflow에서 받은 그대로
+out_dir: datasets/sleepsafe                 # 우리 클래스로 정리한 결과
+
+# 우리 클래스 (순서 = 모델 클래스 번호). sleepsafe/classes.py와 같아야 해요.
+classes: [supine, side, prone, airway_visible, airway_covered]
+
+# 원본 클래스 → 우리 클래스 (null이면 버림)
+class_map:
+  Baby-Supine: supine
+  Baby-Sideways: side
+  Baby-Prone: prone
+  Airway-Visible: airway_visible
+  Airway-Covered: airway_covered
+  Active-Parent: null
+  Toy-Beside: null
+
+# 파일명(정규식)으로 사진 출처를 구분해요. 위에서부터 처음 맞는 것을 써요.
+# Baby-Position은 여러 데이터셋을 모은 것이라 출처마다 파일명 패턴이 달라요.
+source_groups:
+  - {name: skt_doll, pattern: '^\d+_png'}                   # skt/baby_posture 인형 사진
+  - {name: real_baby, pattern: '^(Prone|Sideways|Supine)_'}  # 실제 아기 사진
+  - {name: doll_blanket, pattern: '^IMG_\d+'}               # SIDS(kjy) 인형 연속 촬영 (회색 천으로 덮은 사진 포함)
+  - {name: bassinet, pattern: '^[0-9A-Fa-f]{8}-'}           # 바구니 침대를 위에서 찍은 사진
+default_group: other
+
+# 출처별 분할(실험 B): 이 출처를 통째로 테스트로 빼요. 여러 개 적으면 각각 따로 만들어요.
+holdout_groups: [doll_blanket]
+val_fraction: 0.15
+seed: 0

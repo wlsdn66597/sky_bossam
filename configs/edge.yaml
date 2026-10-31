@@ -1,0 +1,31 @@
+# 실시간 실행 설정 (라즈베리파이 4 / 노트북)
+model: models/A_original_320_aug.onnx  # 파이 4 후보. 다른 모델을 쓰면 imgsz도 같이 바꾸세요
+imgsz: 320                # 모델을 내보낼 때와 같은 크기
+threads: 4                # ONNX Runtime 스레드 수 (파이 4는 코어 4개)
+infer_fps: 3              # 초당 추론 횟수
+camera_size: [640, 480]   # 카메라 해상도
+
+# 판정 기준 (scripts/evaluate.py도 같은 값을 써요)
+# 값 정하기: python scripts/sweep_thresholds.py --exp <실험이름> 결과를 보고 고르세요
+# 지금 값은 A_original_416_aug 비교 결과에서 골랐어요 (몸 0.10~0.25, 얼굴 0.10~0.15 구간의 가운데).
+# 그 구간에서 위험 재현율 93.6%, 정밀도 97.1% (테스트 세트 기준이라 실제보다 약간 낙관적)
+conf_body: 0.2            # 몸(자세) 박스 최소 신뢰도
+conf_airway: 0.15         # 얼굴(코·입) 박스 최소 신뢰도
+covered_without_body: true   # 몸 박스가 없어도 코·입 가림 박스만으로 얼굴 가림으로 봄 (이불에 몸이 다 덮일 때 대비)
+min_brightness: 40        # 평균 밝기(0~255)가 이보다 낮으면 '분석 불가(어두움)'
+
+risk:
+  risk_threshold_s: 5.0   # 엎드림·얼굴 가림이 이만큼 이어지면 위험 (1차 알림)
+  clear_threshold_s: 3.0  # 위험 중 정상이 이만큼 이어지면 위험 종료
+  gap_tolerance_s: 1.0    # 이보다 짧은 분석 공백은 타이머를 유지 (0이면 명세서대로 즉시 초기화)
+  miss_tolerance_s: 1.0   # 조건이 이보다 짧게 안 잡히면 깜빡임으로 보고 타이머 유지 (0이면 한 프레임에 초기화)
+
+server:
+  url: null               # 예: http://192.168.0.10:8000  (null이면 콘솔에만 출력)
+  device_id: crib-01
+  heartbeat_s: 2.0        # 생존 신호 주기 (서버는 8초간 없으면 연결 끊김으로 봄)
+
+snapshot:
+  enabled: true
+  jpeg_quality: 80
+  max_width: 640

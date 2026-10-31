@@ -1,0 +1,15 @@
+# 기본 학습 설정 (Pirotello 외, SBCUP 2026 설정을 따름)
+# 명령줄의 --set key=value 나 experiments.yaml의 overrides로 덮어쓸 수 있어요.
+model: yolov8n.pt
+epochs: 200
+patience: 50
+imgsz: 512      # Baby-Position v1 사진이 512×512라 더 키워도 정보가 늘지 않아요
+batch: 16
+optimizer: Adam
+lr0: 0.001
+lrf: 1.0        # 학습률 고정 (스케줄러 없음)
+fliplr: 0.0     # 좌우 반전 끔
+hsv_v: 0.0      # 밝기 변형 끔
+seed: 0
+workers: 8
+device: 0       # GPU 0번. GPU가 없으면 cpu

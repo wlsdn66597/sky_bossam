@@ -1,0 +1,3 @@
+# 웹 알림 개발 서버
+fastapi>=0.110
+uvicorn[standard]>=0.29

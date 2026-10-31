@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수면 안전 대시보드</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1d2330; --muted:#677084; --line:#e2e5ea;
+          --ok:#1f9d55; --warn:#d98b00; --risk:#d64545; --off:#8a93a3; --accent:#3563e9; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171c; --card:#1d2128; --text:#e8ebf0; --muted:#9aa3b2; --line:#2c323c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+         background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+           padding:16px; border-bottom:1px solid var(--line); background:var(--card); }
+  h1 { font-size:18px; margin:0; }
+  h2 { font-size:15px; margin:0 0 10px; color:var(--muted); font-weight:600; }
+  main { max-width:960px; margin:0 auto; padding:16px; display:grid; gap:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+  .badge { display:inline-block; padding:4px 10px; border-radius:999px; color:#fff; font-weight:700; font-size:14px; }
+  .normal { background:var(--ok); } .caution { background:var(--warn); }
+  .risk { background:var(--risk); } .unavailable, .offline { background:var(--off); }
+  .muted { color:var(--muted); font-size:13px; }
+  button { font:inherit; padding:6px 12px; border-radius:8px; border:1px solid var(--line);
+           background:var(--card); color:var(--text); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  input { font:inherit; width:80px; padding:5px 8px; border-radius:6px; border:1px solid var(--line);
+          background:var(--bg); color:var(--text); }
+  .event { display:grid; grid-template-columns: 160px 1fr; gap:12px; padding:10px 0; border-top:1px solid var(--line); }
+  .event:first-child { border-top:none; }
+  .event img { width:160px; border-radius:8px; background:var(--bg); }
+  .alert { padding:8px 10px; border-left:4px solid var(--off); margin:6px 0; background:var(--bg); border-radius:6px; }
+  .alert.l1 { border-color:var(--warn); } .alert.l2 { border-color:var(--risk); font-weight:700; }
+  @media (max-width: 560px) { .event { grid-template-columns: 1fr; } .event img { width:100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>수면 안전 · 보호자 대시보드</h1>
+  <div class="row">
+    <span id="conn" class="muted">서버 연결 중…</span>
+    <button id="notifyBtn">브라우저 알림 켜기</button>
+  </div>
+</header>
+<main>
+  <section class="card"><h2>카메라 상태</h2><div id="devices" class="muted">아직 연결된 카메라가 없어요.</div></section>
+  <section class="card"><h2>위험 이벤트</h2><div id="events" class="muted">아직 없어요.</div></section>
+  <section class="card"><h2>알림 기록</h2><div id="alerts" class="muted">아직 없어요.</div></section>
+</main>
+<script>
+const KO = { normal:"정상", caution:"주의", risk:"위험", unavailable:"분석 불가", offline:"연결 끊김",
+  supine:"바로 누움", side:"옆으로 누움", prone:"엎드림", airway_visible:"코·입 보임",
+  airway_covered:"코·입 가림", face_covered:"얼굴 가림", no_baby:"아기 안 보임", dark:"너무 어두움",
+  body_not_found:"몸은 안 보이고 가려진 얼굴만 보임" };
+const ko = (k) => (k == null || k === "") ? "-" : (KO[k] || k);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const time = (t) => t ? new Date(t * 1000).toLocaleTimeString("ko-KR") : "-";
+let devices = {}, events = {}, alerts = [];
+
+const boxes = new Map();  // 기기별 영역 (설정 입력칸은 한 번만 만들어 입력 중에 지워지지 않게)
+function renderDevices() {
+  const root = document.getElementById("devices");
+  for (const d of Object.values(devices)) {
+    let box = boxes.get(d.device_id);
+    if (!box) {
+      if (!boxes.size) { root.classList.remove("muted"); root.innerHTML = ""; }
+      box = document.createElement("div");
+      box.style.marginBottom = "14px";
+      box.innerHTML = `<div class="row status"></div>
+        <div class="row muted" style="margin-top:6px">
+          기준 시간 <input type="number" min="1" max="60" step="0.5" class="rt">초
+          2차 알림 <input type="number" min="1" max="600" step="1" class="es">초
+          <button class="save">저장</button><span class="ver"></span></div>`;
+      box.querySelector(".rt").value = d.settings?.risk_threshold_s ?? 5;
+      box.querySelector(".es").value = d.settings?.escalation_s ?? 15;
+      box.querySelector(".save").onclick = () => saveSettings(d.device_id, box);
+      boxes.set(d.device_id, box);
+      root.appendChild(box);
+    }
+    const st = d.online ? d.status : "offline";
+    const why = d.online && d.reason ? ` (${esc(ko(d.reason))})` : "";
+    box.querySelector(".status").innerHTML = `<span class="badge ${esc(st)}">${esc(ko(st))}${why}</span>
+      <b>${esc(d.device_id)}</b>
+      <span class="muted">자세 ${esc(ko(d.posture))} · 코·입 ${esc(ko(d.airway))} · ${esc(d.fps ?? "-")}fps · ${esc(d.age_s)}초 전 신호</span>`;
+    const s = d.settings || {};
+    if (String(s.version) !== box.dataset.ver && !box.contains(document.activeElement)) {
+      box.querySelector(".rt").value = s.risk_threshold_s ?? 5;   // 다른 곳에서 바꾼 설정 반영 (입력 중엔 건드리지 않음)
+      box.querySelector(".es").value = s.escalation_s ?? 15;
+      box.dataset.ver = String(s.version);
+    }
+    box.querySelector(".ver").textContent = `설정 v${s.version ?? "-"} ${d.settings_applied ? "적용 완료" : "적용 대기"}`;
+  }
+}
+
+function renderEvents() {
+  const list = Object.values(events).sort((a, b) => b.received_at - a.received_at).slice(0, 20);
+  if (!list.length) return;
+  document.getElementById("events").innerHTML = list.map(e => `
+    <div class="event">
+      ${e.has_snapshot ? `<img src="/events/${esc(encodeURIComponent(e.event_id))}/snapshot" alt="위험 순간 스냅샷">` : `<div class="muted">스냅샷 없음</div>`}
+      <div>
+        <div class="row"><span class="badge ${e.status === "active" ? "risk" : "normal"}">${e.status === "active" ? "진행 중" : "해소"}</span>
+          <b>${esc(ko(e.risk_type))}</b><span class="muted">${esc(e.device_id)}</span></div>
+        <div class="muted">시작 ${time(e.started_at)} · 확정 ${time(e.confirmed_at)} · 종료 ${time(e.ended_at)}${e.escalated ? " · 2차 알림 보냄" : ""}</div>
+        <div class="row" style="margin-top:6px">${e.acked
+          ? `<span class="muted">${esc(e.acked_by)} 확인 ${time(e.acked_at)}</span>`
+          : `<button class="primary" data-ack="${esc(e.event_id)}">확인했어요</button>`}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderAlerts() {
+  if (!alerts.length) return;
+  document.getElementById("alerts").innerHTML = alerts.slice(0, 50).map(a =>
+    `<div class="alert l${a.level}">${time(a.ts)} · ${esc(a.device_id)} · ${esc(a.message)}</div>`).join("");
+}
+
+function beep() {
+  try { const c = new AudioContext(), o = c.createOscillator(); o.frequency.value = 880;
+        o.connect(c.destination); o.start(); o.stop(c.currentTime + 0.4); } catch (_) {}
+}
+function notify(a) {
+  if (a.level < 1) return;
+  beep();
+  if ("Notification" in window && Notification.permission === "granted")
+    new Notification(a.level >= 2 ? "질식 위험 2차 알림" : "질식 위험 알림", { body: a.message, requireInteraction: true });
+}
+
+async function ack(id) {
+  const r = await fetch(`/events/${encodeURIComponent(id)}/ack`, { method: "POST",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify({ guardian: "웹 보호자" }) });
+  if (r.ok) { events[id] = await r.json(); renderEvents(); }
+}
+document.getElementById("events").addEventListener("click", (e) => {
+  const id = e.target.dataset && e.target.dataset.ack;
+  if (id) ack(id);
+});
+async function saveSettings(id, box) {
+  const body = { risk_threshold_s: +box.querySelector(".rt").value, escalation_s: +box.querySelector(".es").value };
+  const r = await fetch(`/devices/${encodeURIComponent(id)}/risk-settings`,
+    { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
+  if (!r.ok) alert("설정 저장 실패: 값 범위를 확인하세요");
+}
+
+async function load() {
+  (await (await fetch("/devices")).json()).forEach(d => devices[d.device_id] = d);
+  (await (await fetch("/events")).json()).forEach(e => events[e.event_id] = e);
+  alerts = await (await fetch("/alerts")).json();
+  renderDevices(); renderEvents(); renderAlerts();
+}
+
+function connect() {
+  const es = new EventSource("/stream");
+  const conn = document.getElementById("conn");
+  es.onopen = () => conn.textContent = "서버 연결됨";
+  es.onerror = () => conn.textContent = "서버 연결 끊김 · 다시 연결 중…";
+  es.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.type === "device") { devices[msg.device.device_id] = msg.device; renderDevices(); }
+    else if (msg.type === "event") { events[msg.event.event_id] = msg.event; renderEvents(); }
+    else if (msg.type === "alert") { alerts.unshift(msg.alert); renderAlerts(); notify(msg.alert); }
+    else if (msg.type === "settings") { if (devices[msg.device_id]) { devices[msg.device_id].settings = msg.settings; devices[msg.device_id].settings_applied = false; renderDevices(); } }
+  };
+}
+
+document.getElementById("notifyBtn").onclick = async () => {
+  if (!("Notification" in window)) return alert("이 브라우저는 알림을 지원하지 않아요");
+  const p = await Notification.requestPermission();
+  document.getElementById("notifyBtn").textContent = p === "granted" ? "브라우저 알림 켜짐" : "알림 차단됨";
+};
+setInterval(async () => {  // '몇 초 전 신호' 갱신
+  try { (await (await fetch("/devices")).json()).forEach(d => devices[d.device_id] = d); renderDevices(); } catch (_) {}
+}, 5000);
+load().then(connect);
+</script>
+</body>
+</html>
