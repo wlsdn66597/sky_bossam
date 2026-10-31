@@ -1,0 +1,23 @@
+# 데이터·학습 결과 (용량이 커서 올리지 않음)
+datasets/
+runs/
+results/
+models/
+*.pt
+*.onnx
+*_ncnn_model/
+
+# 파이썬 환경
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# 비밀값
+.env
+
+# OS·편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
