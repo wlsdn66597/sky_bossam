@@ -1,0 +1,11 @@
+# 모듈(cry_personal.py)은 numpy만 쓴다. 아래는 시뮬레이션용이다.
+numpy>=1.24,<2
+pandas
+scipy
+scikit-learn
+librosa
+soundfile
+opensmile
+ai-edge-litert      # YAMNet TFLite 실행(없으면 tflite-runtime 또는 tensorflow)
+tensorflow==2.15.*  # sim/export_yamnet_tflite.py
+tensorflow-hub

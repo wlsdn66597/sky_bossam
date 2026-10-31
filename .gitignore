@@ -21,3 +21,11 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# 울음 시뮬레이션 데이터·생성 파일
+data/
+artifacts/*
+!artifacts/.gitkeep
+*.npz
+*.tflite
+*.wav
