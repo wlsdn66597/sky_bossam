@@ -1,0 +1,2 @@
+image_path,source_group,subject_id,subject_kind,bed_id,session_id,event_group_id,duplicate_group_id,negative_verified,posture,visibility,modality
+train/images/REPLACE_WITH_REAL_FILENAME.jpg,REPLACE_SOURCE,,unknown,,,,,false,unknown,unknown,rgb

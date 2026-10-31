@@ -1,0 +1,16 @@
+model: causal_gru
+sample_hz: 5
+history_steps: 16
+input_dim: 40
+hidden_size: 64
+num_layers: 2
+dropout: 0.1
+horizons_s: [1, 3, 5]
+batch_size: 64
+epochs: 50
+patience: 10
+lr: 0.001
+weight_decay: 0.0001
+seed: 42
+max_gap_s: 0.5
+max_train_windows_per_video: 1000

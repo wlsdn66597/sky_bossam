@@ -1,0 +1,11 @@
+{
+  "camera_setup_id": "demo_open_right",
+  "bed_type": "open_support_simulation",
+  "coordinate_system": "normalized_image_xy",
+  "reference_width": 640,
+  "reference_height": 480,
+  "bed_polygon": [[0.10,0.15],[0.90,0.15],[0.90,0.88],[0.10,0.88]],
+  "boundaries": [{"id":"open_right","type":"open","points":[[0.90,0.15],[0.90,0.88]]}],
+  "floor_visible": false,
+  "calibration_valid": false
+}

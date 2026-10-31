@@ -1,0 +1,8 @@
+schema_version: 1
+policy: geometry_temporal_v1
+near_distance_ratio: 0.10
+outward_speed_ratio_per_s: 0.02
+warning_hold_s: 0.6
+clear_hold_s: 1.0
+max_observation_gap_s: 0.5
+alarm_merge_gap_s: 2.0

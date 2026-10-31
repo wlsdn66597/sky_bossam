@@ -1,0 +1,12 @@
+Dataset: baby-crib-observability, version 1
+Publisher: Darios Workspace
+Source: https://universe.roboflow.com/darios-workspace-w6cci/baby-crib-observability/dataset/1
+Public page checked: 2026-10-31
+License displayed by publisher: CC BY 4.0
+Terms link: https://creativecommons.org/licenses/by/4.0/
+Displayed counts: 4262 images, train 2983, valid 853, test 426.
+Export: YOLOv8 bounding-box format. Actual counts/classes are checked after download.
+Transformation by this package: original baby body classes merged to baby_body;
+original class labels preserved in image manifest metadata.
+This record is a source/attribution note, not confirmation of individual subject consent
+or an assertion that all original upstream image rights have been independently audited.

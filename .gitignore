@@ -21,3 +21,10 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# Camera fall pipeline: generated inputs and outputs
+data/
+exports/
+reports/
+.venv*/
+.env*

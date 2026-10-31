@@ -1,0 +1,1 @@
+{"event_id":"EXAMPLE_exit001","video_id":"EXAMPLE_doll_007","event_group_id":"session007","event_type":"unassisted_bed_exit","action_start_s":9.0,"critical_ts_s":12.4,"fall_onset_s":null,"impact_s":null,"end_s":14.0,"boundary_id":"open_right","visibility":"clear","surrogate":true,"annotator_id":"EXAMPLE_annotator","adjudicated":false}
